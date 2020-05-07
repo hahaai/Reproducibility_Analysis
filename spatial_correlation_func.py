@@ -33,13 +33,6 @@ def spatial_corr_plot(base,pipelines,atlases,namechangedict,fc_handle,simpleplot
     '''
 
 
-
-
-
-
-
-    # /data3/cnl/fmriprep/Lei_working/CPAC_XCP/CCS_CPAC_XCP/CPAC_default/sub-0025427_ses-1_bandpassed_demeaned_filtered_antswarp_cc200.1D
-
     # the order of ccs subjects correspondign to cpac nad ndmg
     # cpac: 1-2,    3-14,   15-30
     # ccs : 1-2,    19-30,  3-18
@@ -246,15 +239,14 @@ def spatial_corr_plot(base,pipelines,atlases,namechangedict,fc_handle,simpleplot
     axn.flat[idx+3].set_title(sub)
     '''
 
+'''
+Example to call the functions
+pipelines=['cpac_fmriprep_MNI2004','abcd','fmriprep_MNI2004_2mm','Upenn_cpacfmriprep','dpabi','ccs']
 
 fc_handle=''
 simpleplot=False
 atlases=['200',]
-
-
 base='/Users/leiai/projects/CPAC_fmriprep/Reliability_discriminibility/Finalizing/Minimal/ROI'
-
-pipelines=['cpac_fmriprep_MNI2004','abcd','fmriprep_MNI2004_2mm','Upenn_cpacfmriprep','dpabi','ccs']
 
 
 # this is the name chang for the final plot.
@@ -280,7 +272,6 @@ namechangedict={'cpac_fmriprep':'CPAC:fMRIPrep',
             'fmriprep_MNI2004_2mm':'fMRIPrep(MNI2004-2mm)'
             }
 
+
 spatial_corr_plot(base,pipelines,atlases,namechangedict,fc_handle,simpleplot)
-
-
-
+'''
