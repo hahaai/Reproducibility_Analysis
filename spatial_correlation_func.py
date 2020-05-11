@@ -273,5 +273,5 @@ namechangedict={'cpac_fmriprep':'CPAC:fMRIPrep',
             }
 
 
-spatial_corr_plot(base,base.replace('ROI','figures')pipelines,atlases,namechangedict,fc_handle,simpleplot)
+spatial_corr_plot(base,base.replace('ROI','figures'),pipelines,atlases,namechangedict,fc_handle,simpleplot)
 '''
