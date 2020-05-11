@@ -8,7 +8,7 @@ from scipy.io import loadmat
 from scipy.stats import rankdata
 
 
-def spatial_corr_plot(base,pipelines,atlases,namechangedict,fc_handle,simpleplot):
+def spatial_corr_plot(base,outpath,pipelines,atlases,namechangedict,fc_handle,simpleplot):
 
     '''
     Function to prepare and, optionally, run the C-PAC workflow
@@ -226,9 +226,9 @@ def spatial_corr_plot(base,pipelines,atlases,namechangedict,fc_handle,simpleplot
 
 
     if fc_handle == '':
-        plt.savefig(os.path.dirname(base) + '/figures/spatial_corr_'+'-'.join(pipelines)+'.png')
+        plt.savefig(outpath + '/spatial_corr_'+'-'.join(pipelines)+'.png')
     else:
-        plt.savefig(os.path.dirname(base) + '/figures/spatial_corr_'+'-'.join(pipelines)+fc_handle+'.png')
+        plt.savefig(outpath + '/spatial_corr_'+'-'.join(pipelines)+fc_handle+'.png')
 
 
     '''
@@ -273,5 +273,5 @@ namechangedict={'cpac_fmriprep':'CPAC:fMRIPrep',
             }
 
 
-spatial_corr_plot(base,pipelines,atlases,namechangedict,fc_handle,simpleplot)
+spatial_corr_plot(base,base.replace('ROI','figures')pipelines,atlases,namechangedict,fc_handle,simpleplot)
 '''
