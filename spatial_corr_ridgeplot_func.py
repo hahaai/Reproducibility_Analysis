@@ -57,19 +57,41 @@ def spatial_corr_ridgeplot(base,outpath,pipelines,atlases,namechangedict,fc_hand
         
         #plt.subplots(figsize=(10,20))
 
+
         # Initialize the FacetGrid object
         x=[]
         for i in np.unique(df['g']):
             x.append(np.median(df[df['g']==i]['x']))
         roworder=np.unique(df['g'])[np.argsort(x)[::-1]]
 
-        pal = sns.cubehelix_palette(len(np.unique(df['g'])), rot=-.25, light=.7)
-        g = sns.FacetGrid(df, row="g", hue="g", row_order=roworder, aspect=10, height=2, palette=pal)
+        # for colour and row name match
+        with sns.plotting_context(font_scale=5):
+            g1 = sns.FacetGrid(df, row="g", hue="g", aspect=10, height=2)
+        default_rowname=g1.row_names
+
+        sortidx=[]
+        for i in default_rowname:
+            sortidx.append(list(roworder).index(i))
+
+
+        #pal = sns.cubehelix_palette(len(np.unique(df['g'])), rot=-.25, light=.7)
+        #pal = np.asarray(sns.cubehelix_palette(len(np.unique(df['g'])), rot=.9, light=.7))
+        #pal = np.asarray(sns.color_palette("purple", len(np.unique(df['g']))))
+        pal = np.asarray(sns.cubehelix_palette(len(np.unique(df['g'])), start=.5, rot=-.75,light=0.7))
+
+        #pal=pal[sortidx][::-1]
+        pal=pal[::-1]
+        pal=pal[sortidx]
+        with sns.plotting_context(font_scale=5):
+            g = sns.FacetGrid(df, row="g", hue="g", row_order=roworder, aspect=10, height=2, palette=pal)
+            #g = sns.FacetGrid(df, row="g", hue="g", aspect=10, height=2, palette=pal)
 
         # Draw the densities in a few steps
         #g.map(sns.kdeplot, "x",hist=False)
         g.map(sns.kdeplot, "x",shade=True)
-        #g.map(plt.xlim,(0,1))
+        g.map(plt.axvline, x=0.9, lw=2, clip_on=False)
+        #g.map(plt.axvline, x=0.8, lw=1, clip_on=False)
+        #g.map(plt.axvline, x=0.7, lw=1, clip_on=False)
 
         #g.map(sns.kdeplot, "x", clip_on=False, color="w", lw=2, bw=.2)
         g.map(plt.axhline, y=0, lw=2, clip_on=False)
@@ -78,14 +100,18 @@ def spatial_corr_ridgeplot(base,outpath,pipelines,atlases,namechangedict,fc_hand
         # Define and use a simple function to label the plot in axes coordinates
         def label(x, color, label):
             ax = plt.gca()
-            ax.text(0, .2, label, fontweight="bold", color=color,fontsize=25,
+            ax.text(0, .2, label, fontweight="bold", color='black',fontsize=25,
                     ha="left", va="center", transform=ax.transAxes)
-
+            #ax.text(0, .2, label, fontweight="bold", color=color,fontsize=25,
+            #        ha="left", va="center", transform=ax.transAxes)
 
         g.map(label, "x")
-
         # Set the subplots to overlap
         #g.fig.subplots_adjust(hspace=-.6)
+
+        # change the x axis label size
+        ax = plt.gca()
+        ax.tick_params(axis = 'both', which = 'major', labelsize = 25)
 
         # Remove axes details that don't play well with overlap
         g.set(xlim=(0, 1))
