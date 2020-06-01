@@ -6,9 +6,11 @@ from matplotlib.legend_handler import HandlerLine2D
 from scipy import stats
 from scipy.io import loadmat
 from scipy.stats import rankdata
+from scipy.stats import spearmanr
 
 
-def spatial_corr_plot(base,outpath,pipelines,atlases,namechangedict,fc_handle,simpleplot):
+
+def spatial_corr_plot(base,outpath,pipelines,atlases,namechangedict,fc_handle,simpleplot,corr_type):
 
     '''
     Function to prepare and, optionally, run the C-PAC workflow
@@ -26,6 +28,8 @@ def spatial_corr_plot(base,outpath,pipelines,atlases,namechangedict,fc_handle,si
         how to hand the spatial correlation, it can be '','Scale','Ranking'
     simpleplot : boolean
         flag to indicate the combination of pipelines, True only plot the correlation betwene the first pipeline and the rest.
+    corr_type: string
+        which correlation to do: concordance, spearman, or pearson
     Returns:
         None, but save figure out.
     -------
@@ -49,8 +53,50 @@ def spatial_corr_plot(base,outpath,pipelines,atlases,namechangedict,fc_handle,si
         r,c = np.triu_indices(m,1)
         return A[r,c]
 
-    ### creat empty matrix
+    # concordance_correlation_coefficient from https://github.com/stylianos-kampakis/supervisedPCA-Python/blob/master/Untitled.py
+    def concordance_correlation_coefficient(y_true, y_pred,
+                           sample_weight=None,
+                           multioutput='uniform_average'):
+        """Concordance correlation coefficient.
+        The concordance correlation coefficient is a measure of inter-rater agreement.
+        It measures the deviation of the relationship between predicted and true values
+        from the 45 degree angle.
+        Read more: https://en.wikipedia.org/wiki/Concordance_correlation_coefficient
+        Original paper: Lawrence, I., and Kuei Lin. "A concordance correlation coefficient to evaluate reproducibility." Biometrics (1989): 255-268.  
+        Parameters
+        ----------
+        y_true : array-like of shape = (n_samples) or (n_samples, n_outputs)
+            Ground truth (correct) target values.
+        y_pred : array-like of shape = (n_samples) or (n_samples, n_outputs)
+            Estimated target values.
+        Returns
+        -------
+        loss : A float in the range [-1,1]. A value of 1 indicates perfect agreement
+        between the true and the predicted values.
+        Examples
+        --------
+        >>> from sklearn.metrics import concordance_correlation_coefficient
+        >>> y_true = [3, -0.5, 2, 7]
+        >>> y_pred = [2.5, 0.0, 2, 8]
+        >>> concordance_correlation_coefficient(y_true, y_pred)
+        0.97678916827853024
+        """
+        cor=np.corrcoef(y_true,y_pred)[0][1]
+        
+        mean_true=np.mean(y_true)
+        mean_pred=np.mean(y_pred)
+        
+        var_true=np.var(y_true)
+        var_pred=np.var(y_pred)
+        
+        sd_true=np.std(y_true)
+        sd_pred=np.std(y_pred)
+        
+        numerator=2*cor*sd_true*sd_pred
+        
+        denominator=var_true+var_pred+(mean_true-mean_pred)**2
 
+        return numerator/denominator
 
 
 
@@ -111,7 +157,7 @@ def spatial_corr_plot(base,outpath,pipelines,atlases,namechangedict,fc_handle,si
 
             
            # (df.a - df.a.mean())/df.a.std(ddof=0)
-            def spatial_correlation(corr_a,corr_b,sc):
+            def spatial_correlation(corr_a,corr_b,sc,corr_type):
                 if fc_handle=='Scale':
                     print('here')
                     corr_a[np.isnan(corr_a)]=0
@@ -124,8 +170,15 @@ def spatial_corr_plot(base,outpath,pipelines,atlases,namechangedict,fc_handle,si
                 x=np.isnan(corr_a) | np.isnan(corr_b)
                 corr_a_new=corr_a[~x]
                 corr_b_new=corr_b[~x]
-                sc.append(np.corrcoef(corr_a_new,corr_b_new)[0,1])
+                if corr_type == "spearman":
+                    sc.append(spearmanr(corr_a_new,corr_b_new)[0])
+                elif corr_type == "concordance":
+                    sc.append(concordance_correlation_coefficient(corr_a_new,corr_b_new))
+                else:
+                    sc.append(np.corrcoef(corr_a_new,corr_b_new)[0,1])
                 return sc
+# 
+
 
 
             ### do correlaiton between pipelines
@@ -138,7 +191,7 @@ def spatial_corr_plot(base,outpath,pipelines,atlases,namechangedict,fc_handle,si
                     p2=pipelines[j]
                     corr2= locals()[p2 + '_corr_tri']
                     pp='sc_' + p1 + '_' + p2
-                    locals()[pp] = spatial_correlation(corr1,corr2,locals()[pp])
+                    locals()[pp] = spatial_correlation(corr1,corr2,locals()[pp],corr_type)
 
 
         idx=0
@@ -224,11 +277,10 @@ def spatial_corr_plot(base,outpath,pipelines,atlases,namechangedict,fc_handle,si
 
 
 
-
     if fc_handle == '':
-        plt.savefig(outpath + '/spatial_corr_'+'-'.join(pipelines)+'.png')
+        plt.savefig(outpath + '/spatial_corr_'+corr_type+'_'+'-'.join(pipelines)+'.png')
     else:
-        plt.savefig(outpath + '/spatial_corr_'+'-'.join(pipelines)+fc_handle+'.png')
+        plt.savefig(outpath + '/spatial_corr_'+corr_type+'_'+'-'.join(pipelines)+fc_handle+'.png')
 
 
     '''
@@ -244,6 +296,7 @@ Example to call the functions
 pipelines=['cpac_fmriprep_MNI2004','abcd','fmriprep_MNI2004_2mm','Upenn_cpacfmriprep','dpabi','ccs']
 
 fc_handle=''
+corr_type='pearson'
 simpleplot=False
 atlases=['200',]
 base='/Users/leiai/projects/CPAC_fmriprep/Reliability_discriminibility/Finalizing/Minimal/ROI'
@@ -273,5 +326,5 @@ namechangedict={'cpac_fmriprep':'CPAC:fMRIPrep',
             }
 
 
-spatial_corr_plot(base,base.replace('ROI','figures'),pipelines,atlases,namechangedict,fc_handle,simpleplot)
+spatial_corr_plot(base,base.replace('ROI','figures'),pipelines,atlases,namechangedict,fc_handle,simpleplot,corr_type)
 '''
