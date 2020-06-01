@@ -7,6 +7,7 @@ from matplotlib.legend_handler import HandlerLine2D
 from scipy import stats
 from scipy.io import loadmat
 from scipy.stats import rankdata
+from scipy.stats import spearmanr
 
 
 
