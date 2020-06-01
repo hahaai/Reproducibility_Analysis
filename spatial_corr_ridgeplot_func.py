@@ -29,6 +29,8 @@ def spatial_corr_ridgeplot(base,outpath,pipelines,atlases,namechangedict,fc_hand
         how to hand the spatial correlation, it can be '','Scale','Ranking'
     simpleplot : boolean
         flag to indicate the combination of pipelines, True only plot the correlation betwene the first pipeline and the rest.
+    corr_type: string
+        which correlation to do: concordance, spearman, or pearson
     Returns:
         None, but save figure out.
     -------
@@ -251,7 +253,7 @@ def spatial_corr_ridgeplot(base,outpath,pipelines,atlases,namechangedict,fc_hand
                     p2=pipelines[j]
                     corr2= locals()[p2 + '_corr_tri']
                     pp='sc_' + p1 + '_' + p2
-                    locals()[pp] = spatial_correlation(corr1,corr2,locals()[pp])
+                    locals()[pp] = spatial_correlation(corr1,corr2,locals()[pp],corr_type)
 
 
         idx=0
@@ -290,7 +292,7 @@ def spatial_corr_ridgeplot(base,outpath,pipelines,atlases,namechangedict,fc_hand
                 tmp['g']=pn1+' - '+pn2
                 df_all=pd.concat([df_all,tmp])
 
-        ridgeplot(df_all,os.path.dirname(base) + '/figures/Ridgeplot_spatial_corr_'+'-'.join(pipelines)+'_'+atlas+'.png')
+        ridgeplot(df_all,os.path.dirname(base) + '/figures/Ridgeplot_spatial_corr_'+corr_type+'_'+'-'.join(pipelines)+'_'+atlas+'.png')
 
 
 
@@ -300,6 +302,7 @@ def spatial_corr_ridgeplot(base,outpath,pipelines,atlases,namechangedict,fc_hand
 ### Example
 '''
 fc_handle=''
+corr_type='spearman'
 simpleplot=False
 mulitple_atlas=False
 
@@ -331,5 +334,5 @@ namechangedict={'Upenn_cpacfmriprep':'fMRIPrep:UPenn',
             'fmriprep_MNI2004_2mm':'fMRIPrep(MNI2004-2mm)'
             }
 
-spatial_corr_ridgeplot(base,base.replace('ROI','figures'),pipelines,atlases,namechangedict,fc_handle,simpleplot)
+spatial_corr_ridgeplot(base,base.replace('ROI','figures'),pipelines,atlases,namechangedict,fc_handle,simpleplot,corr_type)
 '''
