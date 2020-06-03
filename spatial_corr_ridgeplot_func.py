@@ -138,8 +138,8 @@ def spatial_corr_ridgeplot(base,outpath,pipelines,atlases,namechangedict,fc_hand
         #g.map(sns.kdeplot, "x",hist=False)
         g.map(sns.kdeplot, "x",shade=True)
         g.map(plt.axvline, x=0.9, lw=2, clip_on=False)
-        #g.map(plt.axvline, x=0.8, lw=1, clip_on=False)
-        #g.map(plt.axvline, x=0.7, lw=1, clip_on=False)
+        g.map(plt.axvline, x=0.8, lw=1, clip_on=False)
+        g.map(plt.axvline, x=0.7, lw=1, clip_on=False)
 
         #g.map(sns.kdeplot, "x", clip_on=False, color="w", lw=2, bw=.2)
         g.map(plt.axhline, y=0, lw=2, clip_on=False)
@@ -262,8 +262,11 @@ def spatial_corr_ridgeplot(base,outpath,pipelines,atlases,namechangedict,fc_hand
         color_palette = sns.color_palette("Paired",num_idx)
         
         df_all=test=pd.DataFrame(columns = ['x','g'])
-        for i in range(0,len(pipelines)):
-        #for i in range(0,1):
+        if simpleplot == True:
+            plotrange=1
+        else:
+            plotrange=len(pipelines)
+        for i in range(0,plotrange):
             for j in range(i+1,len(pipelines)):
                 print(idx)
                 p1=pipelines[i]
