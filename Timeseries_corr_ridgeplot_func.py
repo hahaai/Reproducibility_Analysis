@@ -54,6 +54,16 @@ def spatial_corr_ridgeplot(base,outpath,pipelines,atlases,namechangedict,fc_hand
         r,c = np.triu_indices(m,1)
         return A[r,c]
 
+    def ts_correlation(corr_a,corr_b,sc,corr_type):
+        data_corr=[]
+        for roi_idx in range(0,corr_a.shape[0]):
+            tmp1=corr_a[roi_idx,]
+            tmp2=corr_b[roi_idx,]
+            data_corr.append(np.corrcoef(tmp1,tmp2)[0,1])
+        print('The size of ts_correlaiton is')
+        print(len(data_corr))
+        return data_corr
+
 
     # concordance_correlation_coefficient from https://github.com/stylianos-kampakis/supervisedPCA-Python/blob/master/Untitled.py
     def concordance_correlation_coefficient(y_true, y_pred,
@@ -109,7 +119,7 @@ def spatial_corr_ridgeplot(base,outpath,pipelines,atlases,namechangedict,fc_hand
         # Initialize the FacetGrid object
         x=[]
         for i in np.unique(df['g']):
-            x.append(np.median(df[df['g']==i]['x']))
+            x.append(np.nanmedian(df[df['g']==i]['x']))
         roworder=np.unique(df['g'])[np.argsort(x)[::-1]]
 
         # for colour and row name match
@@ -184,6 +194,9 @@ def spatial_corr_ridgeplot(base,outpath,pipelines,atlases,namechangedict,fc_hand
                 pp='sc_' + p1 + '_' + p2
                 locals()[pp]=[]
 
+        df_all=test=pd.DataFrame(columns = ['x','g'])
+
+
         #for i in range(1,31):
         basesub=25426
         for i in range(1,31):
@@ -198,8 +211,6 @@ def spatial_corr_ridgeplot(base,outpath,pipelines,atlases,namechangedict,fc_hand
                     stop=1
             if stop==1:
                 continue
-
-
 
             print(i)
 
@@ -218,40 +229,11 @@ def spatial_corr_ridgeplot(base,outpath,pipelines,atlases,namechangedict,fc_hand
                 #tmp_corr_tri=upper_tri_indexing(data_corr)
                 locals()[pl+'_corr_tri']=data
 
-
-
-            
            # (df.a - df.a.mean())/df.a.std(ddof=0)
-            def ts_correlation(corr_a,corr_b,sc,corr_type):
-                data_corr=[]
-                for roi_idx in range(0,corr_a.shape[0]):
-                    tmp1=corr_a[roi_idx,]
-                    tmp2=corr_b[roi_idx,]
-                    data_corr.append(np.corrcoef(tmp1,tmp2)[0,1])
-                return data_corr
-                '''
-                if fc_handle=='Scale':
-                    print('here')
-                    corr_a[np.isnan(corr_a)]=0
-                    corr_b[np.isnan(corr_b)]=0
-                    corr_a= (corr_a - corr_a.mean())/corr_a.std(ddof=0)
-                    corr_b= (corr_b - corr_b.mean())/corr_b.std(ddof=0)
-                if fc_handle == 'Ranking':
-                    corr_a = rankdata(corr_a)
-                    corr_b = rankdata(corr_b)
-                x=np.isnan(corr_a) | np.isnan(corr_b)
-                corr_a_new=corr_a[~x]
-                corr_b_new=corr_b[~x]
-                if corr_type == "spearman":
-                    sc.append(spearmanr(corr_a_new,corr_b_new)[0])
-                elif corr_type == "concordance":
-                    sc.append(concordance_correlation_coefficient(corr_a_new,corr_b_new))
-                else:
-                    sc.append(np.corrcoef(corr_a_new,corr_b_new)[0,1])
-                return sc
-                '''
+
 
             ### do correlaiton between pipelines
+            idx=0
             num_idx=(len(pipelines)*(len(pipelines)-1))/2
             color_palette = sns.color_palette("Paired",num_idx)
             for i in range(0,len(pipelines)):
@@ -264,45 +246,45 @@ def spatial_corr_ridgeplot(base,outpath,pipelines,atlases,namechangedict,fc_hand
                     locals()[pp] = ts_correlation(corr1,corr2,locals()[pp],corr_type)
 
 
-        idx=0
+
+            if simpleplot == True:
+                plotrange=1
+            else:
+                plotrange=len(pipelines)
+            for i in range(0,plotrange):
+                for j in range(i+1,len(pipelines)):
+                    print(idx)
+                    p1=pipelines[i]
+                    p2=pipelines[j]
+                    pp1='sc_' + p1 + '_' + p2
+                    pp2='sc_' + p2 + '_' + p1
+                    if pp1 in locals():
+                        pp = locals()[pp1]
+                        print(pp1)
+                    elif pp2 in locals():
+                        pp = locals()[pp2]
+                        print(pp2)
+                    #pn1=p1.replace('newcpac','cpac:xcp').replace('defaultcpac','cpac:default')
+                    #pn2=p2.replace('newcpac','cpac:xcp').replace('defaultcpac','cpac:default')
+                    pn1=p1
+                    pn2=p2
+                    for key in namechangedict:
+                        pn1=pn1.replace(key,namechangedict[key])
+                    #pn1=pn1.replace('cpac','CPAC:fmriprep')
+                    for key in namechangedict:
+                        pn2=pn2.replace(key,namechangedict[key])
+                    #pn2=pn2.replace('cpac','CPAC:fmriprep')
+
+                    print(pp)
+             
+                    tmp=pd.DataFrame(pp, columns=['x'])
+                    tmp['g']=pn1+' - '+pn2
+                    df_all=pd.concat([df_all,tmp])
+                    print(df_all.shape)
+
         num_idx=(len(pipelines)*(len(pipelines)-1))/2
         color_palette = sns.color_palette("Paired",num_idx)
         
-        df_all=test=pd.DataFrame(columns = ['x','g'])
-        if simpleplot == True:
-            plotrange=1
-        else:
-            plotrange=len(pipelines)
-        for i in range(0,plotrange):
-            for j in range(i+1,len(pipelines)):
-                print(idx)
-                p1=pipelines[i]
-                p2=pipelines[j]
-                pp1='sc_' + p1 + '_' + p2
-                pp2='sc_' + p2 + '_' + p1
-                if pp1 in locals():
-                    pp = locals()[pp1]
-                    print(pp1)
-                elif pp2 in locals():
-                    pp = locals()[pp2]
-                    print(pp2)
-                #pn1=p1.replace('newcpac','cpac:xcp').replace('defaultcpac','cpac:default')
-                #pn2=p2.replace('newcpac','cpac:xcp').replace('defaultcpac','cpac:default')
-                pn1=p1
-                pn2=p2
-                for key in namechangedict:
-                    pn1=pn1.replace(key,namechangedict[key])
-                #pn1=pn1.replace('cpac','CPAC:fmriprep')
-                for key in namechangedict:
-                    pn2=pn2.replace(key,namechangedict[key])
-                #pn2=pn2.replace('cpac','CPAC:fmriprep')
-
-                print(pp)
-
-                tmp=pd.DataFrame(pp, columns=['x'])
-                tmp['g']=pn1+' - '+pn2
-                df_all=pd.concat([df_all,tmp])
-
         ridgeplot(df_all,os.path.dirname(base) + '/figures/Ridgeplot_TS_corr_'+corr_type+'_'+'-'.join(pipelines)+'_'+atlas+'.png')
 
 
