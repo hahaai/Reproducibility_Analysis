@@ -60,8 +60,6 @@ def spatial_corr_plot(base,outpath,pipelines1,pipelines2,pipelines3,pipeines4,at
             tmp1=corr_a[roi_idx,]
             tmp2=corr_b[roi_idx,]
             data_corr.append(np.corrcoef(tmp1,tmp2)[0,1])
-        print('The size of ts_correlaiton is')
-        print(len(data_corr))
         return data_corr
 
     # concordance_correlation_coefficient from https://github.com/stylianos-kampakis/supervisedPCA-Python/blob/master/Untitled.py
@@ -114,8 +112,8 @@ def spatial_corr_plot(base,outpath,pipelines1,pipelines2,pipelines3,pipeines4,at
 
     plt.cla()
     fig, axs = plt.subplots(4,4,figsize=(15,12),sharex=True,sharey=True,dpi=600)
-    plt.xlim(0, 1) 
-    plt.ylim(0, 33) 
+    plt.xlim(0.4, 1) 
+    plt.ylim(0, 35) 
 
 
     base_orig=base
@@ -151,7 +149,6 @@ def spatial_corr_plot(base,outpath,pipelines1,pipelines2,pipelines3,pipeines4,at
                 if stop==1:
                     continue
 
-                print(i)
 
                 # put them all together, load each pipeline file and calcuate calrelaiton and give it a different name.
                 for pl in pipelines:
@@ -192,17 +189,14 @@ def spatial_corr_plot(base,outpath,pipelines1,pipelines2,pipelines3,pipeines4,at
                     plotrange=len(pipelines)
                 for i in range(0,plotrange):
                     for j in range(i+1,len(pipelines)):
-                        print(idx)
                         p1=pipelines[i]
                         p2=pipelines[j]
                         pp1='sc_' + p1 + '_' + p2
                         pp2='sc_' + p2 + '_' + p1
                         if pp1 in locals():
                             pp = locals()[pp1]
-                            print(pp1)
                         elif pp2 in locals():
                             pp = locals()[pp2]
-                            print(pp2)
                         #pn1=p1.replace('newcpac','cpac:xcp').replace('defaultcpac','cpac:default')
                         #pn2=p2.replace('newcpac','cpac:xcp').replace('defaultcpac','cpac:default')
                         pn1=p1
@@ -214,14 +208,12 @@ def spatial_corr_plot(base,outpath,pipelines1,pipelines2,pipelines3,pipeines4,at
                             pn2=pn2.replace(key,namechangedict[key])
                         #pn2=pn2.replace('cpac','CPAC:fmriprep')
 
-                        print(pp)
                  
                         tmp=pd.DataFrame(pp, columns=['x'])
                         tmp['g']=pn1+' - '+pn2
                         df_all=pd.concat([df_all,tmp])
-                        df_all.to_csv(outpath + '/Summary_Timeseries_spatial_corr_'+corr_type+'.csv')
-                        print(df_all.shape)
-                        print(pp)
+            df_all.to_csv(outpath + '/Summary_Timeseries_spatial_corr_'+corr_type+'-'.join(pipelines)+'.csv')
+            print(df_all.shape)
 
 
             if simpleplot == True:
@@ -230,7 +222,6 @@ def spatial_corr_plot(base,outpath,pipelines1,pipelines2,pipelines3,pipeines4,at
                 plotrange=len(pipelines)
             for i in range(0,plotrange):
                 for j in range(i+1,len(pipelines)):
-                    print(idx)
                     p1=pipelines[i]
                     p2=pipelines[j]
                     pn1=p1
@@ -242,11 +233,11 @@ def spatial_corr_plot(base,outpath,pipelines1,pipelines2,pipelines3,pipeines4,at
                         pn2=pn2.replace(key,namechangedict[key])
                     
                     if atlas == '200':
-                        g=sns.distplot(df_all['x'][df_all['g']==pn1+' - '+pn2],color= 'black',hist=False,ax=axs[axs_indx,j-1])
+                        g=sns.distplot(df_all['x'][df_all['g']==pn1+' - '+pn2],color= 'black',hist=False,ax=axs[axs_indx,j-1],axlabel='')
                     elif atlas == '600':
-                        g=sns.distplot(pp,color= 'black',hist=False, kde_kws={'linestyle':'--'},ax=axs[axs_indx,j-1])
+                        g=sns.distplot(pp,color= 'black',hist=False, kde_kws={'linestyle':'--'},ax=axs[axs_indx,j-1],axlabel='')
                     else:
-                        g=sns.distplot(pp,color= 'black',hist=False, kde_kws={'linestyle':':'},ax=axs[axs_indx,j-1])
+                        g=sns.distplot(pp,color= 'black',hist=False, kde_kws={'linestyle':':'},ax=axs[axs_indx,j-1],axlabel='')
                     idx += 1
 
 
