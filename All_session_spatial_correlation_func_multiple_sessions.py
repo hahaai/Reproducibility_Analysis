@@ -7,7 +7,12 @@ from scipy import stats
 from scipy.io import loadmat
 from scipy.stats import rankdata
 from scipy.stats import spearmanr
+import random
+import string
 
+def randomString(stringLength=8):
+    letters = string.ascii_lowercase
+    return ''.join(random.choice(letters) for i in range(stringLength))
 
 
 def spatial_corr_plot(base,outpath,pipelines_list,atlases,namechangedict,fc_handle,simpleplot,corr_type):
@@ -145,9 +150,42 @@ def spatial_corr_plot(base,outpath,pipelines_list,atlases,namechangedict,fc_hand
 
     num_pair=len(pipelines_list) # this is number of rows of the plot
 
+    
     duration10=[['a'],['j']]
     duration30=[['a','b','c'],['h','i','j']]
     duration50=[['a','b','c','d','e'],['f','g','h','i','j']]
+    
+    # random select sessions
+    All_sessions=['a','b','c','d','e','f','g','h','i','j']
+
+    def list_difference(list1,list2):
+        list_difference = []
+        for item in list1:
+            if item not in list2:
+                list_difference.append(item)
+        return list_difference
+
+    # 10:
+    tt=1
+    tmp1=random.sample(All_sessions,tt)
+    tmp2=random.sample(list_difference(All_sessions,tmp1),tt)
+    duration10=[tmp1,tmp2]
+
+   # 30:
+    tt=3
+    tmp1=random.sample(All_sessions,tt)
+    tmp2=random.sample(list_difference(All_sessions,tmp1),tt)
+    duration30=[tmp1,tmp2]
+
+   # 50:
+    tt=5
+    tmp1=random.sample(All_sessions,tt)
+    tmp2=random.sample(list_difference(All_sessions,tmp1),tt)
+    duration50=[tmp1,tmp2]
+
+
+    name_postfix=''.join(sum(duration10, [])) + '_' + ''.join(sum(duration30, [])) + '_' + ''.join(sum(duration50, []))
+
 
 
     plt.cla()
@@ -288,7 +326,7 @@ def spatial_corr_plot(base,outpath,pipelines_list,atlases,namechangedict,fc_hand
 
 
     if fc_handle == '':
-        plt.savefig(outpath + '/Mult_session_spatial_corr_'+corr_type+'.png')
+        plt.savefig(outpath + '/Mult_session_spatial_corr_'+corr_type+'+'+name_postfix+'.png')
     else:
         plt.savefig(outpath + '/Mult_session_spatial_corr_'+corr_type+'_'+fc_handle+'.png')
 
