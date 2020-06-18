@@ -15,6 +15,69 @@ def randomString(stringLength=8):
     return ''.join(random.choice(letters) for i in range(stringLength))
 
 
+def timeseries_bootstrap(tseries, block_size, random_state=None):
+    """
+    Generates a bootstrap sample derived from the input time-series.
+    Utilizes Circular-block-bootstrap method described in [1]_.
+
+    Parameters
+    ----------
+    tseries : array_like
+        A matrix of shapes (`M`, `N`) with `M` timepoints and `N` variables
+    block_size : integer
+        Size of the bootstrapped blocks
+    random_state : integer
+        the random state to seed the bootstrap
+
+    Returns
+    -------
+    bseries : array_like
+        Bootstrap sample of the input timeseries
+
+
+    References
+    ----------
+    .. [1] P. Bellec; G. Marrelec; H. Benali, A bootstrap test to investigate
+       changes in brain connectivity for functional MRI. Statistica Sinica,
+       special issue on Statistical Challenges and Advances in Brain Science,
+       2008, 18: 1253-1268.
+
+    Examples
+    --------
+
+    >>> x = np.arange(50).reshape((5, 10)).T
+    >>> sample_bootstrap(x, 3)
+    array([[ 7, 17, 27, 37, 47 ],
+           [ 8, 18, 28, 38, 48 ],
+           [ 9, 19, 29, 39, 49 ],
+           [ 4, 14, 24, 34, 44 ],
+           [ 5, 15, 25, 35, 45 ],
+           [ 6, 16, 26, 36, 46 ],
+           [ 0, 10, 20, 30, 40 ],
+           [ 1, 11, 21, 31, 41 ],
+           [ 2, 12, 22, 32, 42 ],
+           [ 4, 14, 24, 34, 44 ]])
+
+    """
+    import numpy as np
+
+    if not random_state:
+        random_state = np.random.RandomState()
+
+    # calculate number of blocks
+    k = int(np.ceil(float(tseries.shape[0]) / block_size))
+
+    # generate random indices of blocks
+    r_ind = np.floor(random_state.rand(1, k) * tseries.shape[0])
+    blocks = np.dot(np.arange(0, block_size)[:, np.newaxis], np.ones([1, k]))
+
+    block_offsets = np.dot(np.ones([block_size, 1]), r_ind)
+    block_mask = (blocks + block_offsets).flatten('F')[:tseries.shape[0]]
+    block_mask = np.mod(block_mask, tseries.shape[0])
+
+    return tseries[block_mask.astype('int'), :], block_mask.astype('int')
+
+
 def spatial_corr_plot(base,outpath,pipelines_list,atlases,namechangedict,fc_handle,simpleplot,corr_type):
 
     '''
@@ -57,7 +120,6 @@ def spatial_corr_plot(base,outpath,pipelines_list,atlases,namechangedict,fc_hand
         m = A.shape[0]
         r,c = np.triu_indices(m,1)
         return A[r,c]
-
     def load_multple_sess_data(datafolder,sub,sessions):
         if 'sess_ave' in locals():
             del sess_ave
@@ -68,9 +130,24 @@ def spatial_corr_plot(base,outpath,pipelines_list,atlases,namechangedict,fc_hand
             if data.shape[0] != 295:
                 idx= data.shape[0]-295
                 data=data[idx:,]
-            data=data.transpose()
-            data_corr=np.corrcoef(data)
-            tmp_corr_tri_tmp=upper_tri_indexing(data_corr)   
+
+            ### bootstrapping the time series and then get the correlaiton matrix for each bootstrapping timeseries, then average the correlaiton matrix over all the bootstraping.
+            block_size=np.int(np.floor(np.sqrt(data.shape[0])))
+            bs_size=100
+            if 'data_bs' in locals():
+                del data_bs
+            for bs_idx in range(0,bs_size):
+                tmp=timeseries_bootstrap(data,block_size)[0]
+                tmp=tmp.transpose()
+                tmp_corr=np.corrcoef(tmp)
+                tmp_corr_tri_tmp=upper_tri_indexing(tmp_corr)   
+                if 'data_bs' in locals():
+                    data_bs=data_bs+tmp_corr_tri_tmp
+                else:
+                    data_bs=tmp_corr_tri_tmp
+
+            tmp_corr_tri_tmp=data_bs/bs_size
+
             if 'sess_ave' in locals():
                 sess_ave=sess_ave+tmp_corr_tri_tmp
             else:
@@ -212,7 +289,7 @@ def spatial_corr_plot(base,outpath,pipelines_list,atlases,namechangedict,fc_hand
                 else:
                     session_idx=[0,0]
             
-                #### Get each fiture done
+                #### Get each figure done
                 sess_all=[] # get all session used firstly, will check if have them all.
                 for ii in session_idx:
                     for ses in duration_col[ii]:
@@ -224,7 +301,11 @@ def spatial_corr_plot(base,outpath,pipelines_list,atlases,namechangedict,fc_hand
                         p2=pipelines[j]
                         pp='sc_' + p1 + '_' + p2
                         locals()[pp]=[]
-
+  
+                # discrimination dataset a R script will be called.
+                #discm_data
+                if 'discm_data' in locals():
+                    del discm_data
                 basesub=25426
                 for isub in range(1,31):
                     if basesub+isub == 25430:
@@ -249,12 +330,17 @@ def spatial_corr_plot(base,outpath,pipelines_list,atlases,namechangedict,fc_hand
 
                         # load the data - need to average sessions.
                         tmp_corr_tri=load_multple_sess_data(datafolder,str(isub+basesub),duration_col[ii])
-
+                        
                         if pl+'_corr_tri' in locals():
                             locals()[pl+'_1_corr_tri']=tmp_corr_tri
                         else:
                             locals()[pl+'_corr_tri']=tmp_corr_tri
 
+                        # discriminability
+                        if 'discm_data' in locals():
+                            discm_data = np.row_stack((discm_data,tmp_corr_tri))
+                        else:
+                            discm_data=tmp_corr_tri
 
                     ### do correlaiton between pipelines
                     num_idx=(len(pipelines)*(len(pipelines)-1))/2
@@ -280,7 +366,12 @@ def spatial_corr_plot(base,outpath,pipelines_list,atlases,namechangedict,fc_hand
                             del locals()[pl+'_1_corr_tri']
                         if pl+'_corr_tri' in locals():
                             del locals()[pl+'_corr_tri']
-                # here
+
+                # do discriminability for one pipeline pari
+                print('disc data type is')
+                print(discm_data.shape)
+                # in discr=discr.stat(discm_data,sort(c(1:29,1:29)))
+
             
                 if simpleplot == True:
                     plotrange=1
@@ -395,7 +486,6 @@ namechangedict={'cpac_fmriprep':'CPAC:fMRIPrep',
             'fmriprep_MNI2009_2mm':'fMRIPrep(MNI2009-2mm)',
             'fmriprep_MNI2004_2mm':'fMRIPrep(MNI2004-2mm)'
             }
-
 
 spatial_corr_plot(base,base.replace('ROI','figures'),pipelines_list,atlases,namechangedict,fc_handle,simpleplot,corr_type)
 
