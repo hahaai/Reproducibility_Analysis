@@ -10,7 +10,7 @@ from scipy.stats import spearmanr
 
 
 
-def spatial_corr_plot(base,outpath,pipelines1,pipelines2,pipelines3,pipeines4,atlases,namechangedict,fc_handle,simpleplot,corr_type):
+def spatial_corr_plot(base,outpath,pipelines1,pipelines1_1,pipelines2,pipelines3,pipeines4,atlases,namechangedict,fc_handle,simpleplot,corr_type):
 
     '''
     Function to prepare and, optionally, run the C-PAC workflow
@@ -102,7 +102,7 @@ def spatial_corr_plot(base,outpath,pipelines1,pipelines2,pipelines3,pipeines4,at
 
 
     plt.cla()
-    fig, axs = plt.subplots(4,4,figsize=(15,12),sharex=True,sharey=True,dpi=600)
+    fig, axs = plt.subplots(5,4,figsize=(15,12),sharex=True,sharey=True,dpi=600)
     plt.xlim(0, 1) 
     plt.ylim(0, 33) 
 
@@ -235,24 +235,27 @@ def spatial_corr_plot(base,outpath,pipelines1,pipelines2,pipelines3,pipeines4,at
     # 
                     print(pp)
                     if atlas == '200':
-                        g=sns.distplot(pp,color= 'black',hist=False,ax=axs[axs_indx,j-1])
+                        g=sns.distplot(pp,color= 'black',hist=False,ax=axs[axs_indx,j-1],axlabel='')
                     elif atlas == '600':
-                        g=sns.distplot(pp,color= 'black',hist=False, kde_kws={'linestyle':'--'},ax=axs[axs_indx,j-1])
+                        g=sns.distplot(pp,color= 'black',hist=False, kde_kws={'linestyle':'--'},ax=axs[axs_indx,j-1],axlabel='')
                     else:
-                        g=sns.distplot(pp,color= 'black',hist=False, kde_kws={'linestyle':':'},ax=axs[axs_indx,j-1])
+                        g=sns.distplot(pp,color= 'black',hist=False, kde_kws={'linestyle':':'},ax=axs[axs_indx,j-1],axlabel='')
                     idx += 1
 
 
 
     # add plots for all  4 pipelines
     plot_symmary(pipelines1,base.replace('Full','Minimal'),0)
-    plot_symmary(pipelines2,base,1)
-    plot_symmary(pipelines3,base,2)
-    plot_symmary(pipelines4,base,3)
+    plot_symmary(pipelines1_1,base.replace('Full','Minimal'),1)
+    plot_symmary(pipelines2,base,2)
+    plot_symmary(pipelines3,base,3)
+    plot_symmary(pipelines4,base,4)
 
 
     if fc_handle == '':
-        plt.savefig(outpath + '/Summary_spatial_corr_'+corr_type+'.png')
+        #plt.savefig(outpath + '/Summary_spatial_corr_'+corr_type+'.png')
+        plt.savefig(outpath + '/Summary_spatial_corr_'+corr_type+'_butterworth.png')
+
     else:
         plt.savefig(outpath + '/Summary_spatial_corr_'+corr_type+'_'+fc_handle+'.png')
 
@@ -273,14 +276,18 @@ def spatial_corr_plot(base,outpath,pipelines1,pipelines2,pipelines3,pipeines4,at
 
 pipelines1=['fmriprep_1','cpac_default_off_nuisance','cpac_fmriprep','cpac_default_off_nuisance','cpac_fmriprep']
 
+pipelines1_1=['XCP_on_fmriprep_nothing','cpac_default_off_nuisance','cpac_fmriprep','XCP_on_cpac_default_nothing','XCP_on_cpac_nothing']
+
 # summary figure - only filter (minimal+filter)
-pipelines2=['XCP_fmriprep_tmp','cpac_default_off_nuisance_with_filt','cpac_fmriprep_with_filt','XCP_cpac_default_tmp','XCP_cpac_FX_tmp']
+#pipelines2=['XCP_fmriprep_tmp','cpac_default_off_nuisance_with_filt','cpac_fmriprep_with_filt','XCP_cpac_default_tmp','XCP_cpac_FX_tmp']
+#pipelines2=['XCP_fmriprep_tmp','cpac_default_off_nuisance_with_filt_3dbandpass','cpac_fmriprep_with_filt_3dbandpass','XCP_cpac_default_tmp','XCP_cpac_FX_tmp']
+pipelines2=['XCP_fmriprep_tmp','cpac_default_off_nuisance_with_filt_butterworth','cpac_fmriprep_with_filt_butterworth','XCP_cpac_default_tmp','XCP_cpac_FX_tmp']
 
 # summary figure - only nuisance (minimal+nuisance)
-pipelines3=['XCP_fmriprep_reg','cpac_default_filt_0_nuisance_1','cpac_FX_no_filt','XCP_cpac_default_reg','XCP_cpac_FX_reg']
+pipelines3=['XCP_fmriprep_reg','cpac_default_filt_0_nuisance_1_36','cpac_FX_no_filt','XCP_cpac_default_reg','XCP_cpac_FX_reg']
 
 # the main figure for end-to-end processing
-pipelines4=['xcp_on_fmriprep','cpac_default_24','cpac_3dvolreg_36','xcp_on_cpac_default','xcp_on_cpac']
+pipelines4=['xcp_on_fmriprep','cpac_default_36','cpac_3dvolreg_36','xcp_on_cpac_default','xcp_on_cpac']
 
 
 
@@ -316,7 +323,7 @@ namechangedict={'cpac_fmriprep':'CPAC:fMRIPrep',
             }
 
 
-spatial_corr_plot(base,base.replace('ROI','figures'),pipelines1,pipelines2,pipelines3,pipelines4,atlases,namechangedict,fc_handle,simpleplot,corr_type)
+spatial_corr_plot(base,base.replace('ROI','figures'),pipelines1,pipelines1_1,pipelines2,pipelines3,pipelines4,atlases,namechangedict,fc_handle,simpleplot,corr_type)
 
 
 
