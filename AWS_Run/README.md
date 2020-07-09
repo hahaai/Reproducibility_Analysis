@@ -1,6 +1,4 @@
-
-#Pipeles
-
+#Pipelines
 
 ##pipeline_config_Default.yml:
 
