@@ -1,5 +1,7 @@
 import sys
-#sys.path.append("/Users/leiai/projects/CPAC_fmriprep/Scripts")
+import os
+wd_path=os.path.dirname(os.path.realpath(__file__))
+sys.path.append(wd_path)
 from spatial_corr_ridgeplot_func import spatial_corr_ridgeplot
 from spatial_corr_ridgeplot_func import ICC_ridgeplot
 
@@ -59,8 +61,7 @@ namechangedict={'Upenn_cpacfmriprep':'fMRIPrep:UPenn',
             'fmriprep_MNI2006_native':'fMRIPrep'
             }
 
-base='/Users/leiai/projects/CPAC_fmriprep/Reliability_discriminibility/Finalizing/Minimal/ROI'
-
+base=wd_path + '/ROI'
 
 
 ######## Plot
