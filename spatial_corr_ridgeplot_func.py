@@ -101,11 +101,11 @@ def spatial_corr_ridgeplot(base,outpath,pipelines,atlases,namechangedict,fc_hand
         return numerator/denominator
 
 
-    def ridgeplot(df,outfile):
+    def ridgeplot(df,atlases,outfile):
         
         #plt.subplots(figsize=(10,20))
 
-
+        show_label=False
         # Initialize the FacetGrid object
         x=[]
         for i in np.unique(df['g']):
@@ -114,7 +114,7 @@ def spatial_corr_ridgeplot(base,outpath,pipelines,atlases,namechangedict,fc_hand
 
         # for colour and row name match
         with sns.plotting_context(font_scale=5):
-            g1 = sns.FacetGrid(df, row="g", hue="g", aspect=10, height=2)
+            g1 = sns.FacetGrid(df, row="g", hue="g", aspect=len(pipelines)*(len(pipelines)-1)/2, height=2)
         default_rowname=g1.row_names
 
         sortidx=[]
@@ -131,15 +131,37 @@ def spatial_corr_ridgeplot(base,outpath,pipelines,atlases,namechangedict,fc_hand
         pal=pal[::-1]
         pal=pal[sortidx]
         with sns.plotting_context(font_scale=5):
-            g = sns.FacetGrid(df, row="g", hue="g", row_order=roworder, aspect=10, height=2, palette=pal)
+            #g = sns.FacetGrid(df, sharey=True, row="g", hue="g", row_order=roworder, aspect=len(pipelines)*(len(pipelines)-1)/4, height=2*10/(len(pipelines)*(len(pipelines)-1)/2), palette=pal)
+            #g = sns.FacetGrid(df, sharey=True, row="g", hue="g", row_order=roworder, aspect=5, height=2, palette=pal)
+            g = sns.FacetGrid(df, sharey=False, row="g", hue="g", row_order=roworder, aspect=5, height=2, palette=pal)
+
+            #g = sns.FacetGrid(df, sharey=True, row="g", hue="g", row_order=roworder, aspect=10/2.8, height=2.8, palette=pal)
+
             #g = sns.FacetGrid(df, row="g", hue="g", aspect=10, height=2, palette=pal)
 
         # Draw the densities in a few steps
         #g.map(sns.kdeplot, "x",hist=False)
-        g.map(sns.kdeplot, "x",shade=True)
-        g.map(plt.axvline, x=0.9, lw=2, clip_on=False)
-        g.map(plt.axvline, x=0.8, lw=1, clip_on=False)
-        g.map(plt.axvline, x=0.7, lw=1, clip_on=False)
+        
+        #g.map(sns.kdeplot, "x",shade=True)
+
+        if len(atlases)==1:
+            g.map(sns.kdeplot, "x",shade=True,color='red')
+        if len(atlases)==2:
+            g.map(sns.kdeplot, "x",shade=True,color='red')
+            g.map(sns.kdeplot, "xx",shade=True,color='blue')
+        if len(atlases)==3:
+            g.map(sns.kdeplot, "x",shade=True,color='red')
+            g.map(sns.kdeplot, "xx",shade=True,color='blue')
+            g.map(sns.kdeplot, "xxx",shade=True,color='black')
+
+        #g.map(sns.kdeplot, df2['x'],shade=True,color='blue')
+        lw_value=3
+        g.map(plt.axvline, x=1, lw=lw_value, clip_on=False,color=(134/256.0,250/256.0,167/256.0))
+        g.map(plt.axvline, x=0.9, lw=lw_value, clip_on=False,color=(128/256.0,171/256.0,69/256.0))
+        g.map(plt.axvline, x=0.8, lw=lw_value, clip_on=False,color=(128/256.0,126/256.0,38/256.0))
+        g.map(plt.axvline, x=0.7, lw=lw_value, clip_on=False,color=(246/256.0,192/256.0,66/256.0))
+        g.map(plt.axvline, x=0.6, lw=lw_value, clip_on=False,color=(192/256.0,98/256.0,43/256.0))
+
 
         #g.map(sns.kdeplot, "x", clip_on=False, color="w", lw=2, bw=.2)
         g.map(plt.axhline, y=0, lw=2, clip_on=False)
@@ -148,18 +170,19 @@ def spatial_corr_ridgeplot(base,outpath,pipelines,atlases,namechangedict,fc_hand
         # Define and use a simple function to label the plot in axes coordinates
         def label(x, color, label):
             ax = plt.gca()
-            ax.text(0, .2, label, fontweight="bold", color='black',fontsize=25,
+            ax.text(0, .2, label, fontweight="bold", color='black',fontsize=35,
                     ha="left", va="center", transform=ax.transAxes)
             #ax.text(0, .2, label, fontweight="bold", color=color,fontsize=25,
             #        ha="left", va="center", transform=ax.transAxes)
 
-        g.map(label, "x")
+        if show_label==True:
+            g.map(label, "x")
         # Set the subplots to overlap
         #g.fig.subplots_adjust(hspace=-.6)
 
         # change the x axis label size
         ax = plt.gca()
-        ax.tick_params(axis = 'both', which = 'major', labelsize = 25)
+        ax.tick_params(axis = 'both', which = 'major', labelsize = 35)
 
         # Remove axes details that don't play well with overlap
         g.set(xlim=(0, 1))
@@ -167,12 +190,26 @@ def spatial_corr_ridgeplot(base,outpath,pipelines,atlases,namechangedict,fc_hand
         g.set(xlabel='')
         g.set(yticks=[])
         g.despine(bottom=True, left=True)
+
+        if len(os.path.basename(outfile))>140:
+            outfile=os.path.dirname(outfile)+ '/' + os.path.basename(outfile)[0:130]+'.png'
+
         g.savefig(outfile)
+        return [x for _,x in sorted(zip(sortidx,default_rowname))]
 
     #plt.cla()
     #plt.subplots(figsize=(10,8))
 
+
+    # define matrix for mean and median
+    value_median=pd.DataFrame(np.zeros(((len(pipelines)*(len(pipelines)-1))/2,4)), columns=['Pipelines','Atlas200','Atlas600','Atlas1000'])
+    value_std=pd.DataFrame(np.zeros(((len(pipelines)*(len(pipelines)-1))/2,4)), columns=['Pipelines','Atlas200','Atlas600','Atlas1000'])
+
+    value_quartile=pd.DataFrame(np.zeros(((len(pipelines)*(len(pipelines)-1))/2,13)), columns=['Pipelines','25_Atlas200','50_Atlas200','75_Atlas200','100_Atlas200','25_Atlas600','50_Atlas600','75_Atlas600','100_Atlas600','25_Atlas1000','50_Atlas1000','75_Atlas1000','100_Atlas1000'])
+    # np.percentile(data, 25, interpolation = 'midpoint') 
+
     #for atlas in ['200','600','1000']:
+    atlas_idx=0
     for atlas in atlases:
 
         num_idx=(len(pipelines)*(len(pipelines)-1))/2
@@ -187,8 +224,8 @@ def spatial_corr_ridgeplot(base,outpath,pipelines,atlases,namechangedict,fc_hand
         #for i in range(1,31):
         basesub=25426
         for i in range(1,31):
-            #if basesub+i == 25430:
-            #    continue
+            if basesub+i == 25430:
+                continue
             stop=0
             for xxx in pipelines:
                 fodlercontent=os.listdir(base +'/ROI_Schaefer' + atlas + '/' + xxx)
@@ -261,7 +298,7 @@ def spatial_corr_ridgeplot(base,outpath,pipelines,atlases,namechangedict,fc_hand
         num_idx=(len(pipelines)*(len(pipelines)-1))/2
         color_palette = sns.color_palette("Paired",num_idx)
         
-        df_all=test=pd.DataFrame(columns = ['x','g'])
+        df_all=pd.DataFrame(columns = ['x','g'])
         if simpleplot == True:
             plotrange=1
         else:
@@ -291,16 +328,237 @@ def spatial_corr_ridgeplot(base,outpath,pipelines,atlases,namechangedict,fc_hand
                 #pn2=pn2.replace('cpac','CPAC:fmriprep')
 
                 print(pp)
+                # get median and std
+                print(pp1+str(np.median(pp))+str(np.std(pp)))
+                value_median['Pipelines'][idx] = pp1
+                value_median['Atlas'+atlas][idx] = np.median(pp)
+
+                value_std['Pipelines'][idx] = pp1
+                value_std['Atlas'+atlas][idx] = np.std(pp)
+                
+                value_quartile['Pipelines'][idx] = pp1
+                for pct_val in [25,50,75,100]:
+                    value_quartile[str(pct_val)+'_Atlas'+atlas][idx] = np.percentile(pp, pct_val, interpolation = 'midpoint') 
+
 
                 tmp=pd.DataFrame(pp, columns=['x'])
                 tmp['g']=pn1+' - '+pn2
                 df_all=pd.concat([df_all,tmp])
+                idx +=1
+        #ridgeplot(df_all,os.path.dirname(base) + '/figures/Ridgeplot_spatial_corr_'+corr_type+'_'+'-'.join(pipelines)[0:90]+'_'+atlas+'.png')
 
-        ridgeplot(df_all,os.path.dirname(base) + '/figures/Ridgeplot_spatial_corr_'+corr_type+'_'+'-'.join(pipelines)+'_'+atlas+'.png')
+        # put multipel atlas in one redge plot. 
+        if atlas_idx==0:
+            df_ridge =df_all
+        elif atlas_idx==1:
+            df_ridge['xx']=df_all['x']
+        elif atlas_idx==2:
+            df_ridge['xxx']=df_all['x']
+        atlas_idx += 1
+
+    print(value_median)
+    value_median.to_csv(os.path.dirname(base) + '/figures/Ridgeplot_spatial_corr_'+corr_type+'_'+'-'.join(pipelines)[0:90]+'_Median.csv')
+    value_std.to_csv(os.path.dirname(base) + '/figures/Ridgeplot_spatial_corr_'+corr_type+'_'+'-'.join(pipelines)[0:90]+'_std.csv')
+
+    value_quartile.to_csv(os.path.dirname(base) + '/figures/Ridgeplot_spatial_corr_'+corr_type+'_'+'-'.join(pipelines)[0:90]+'_quartile.csv')
+
+
+    plotnameorder=ridgeplot(df_ridge,atlases,os.path.dirname(base) + '/figures/Ridgeplot_spatial_corr_'+corr_type+'_'+'-'.join(pipelines)[0:90]+'_'+atlas+'.png')
+
+    return plotnameorder
+
+def ICC_ridgeplot(base,outpath,pipelines,atlases,namechangedict,simpleplot,plotnameorder):
+    # cpac_default_off_nuisance_ccs_ICC.csv
+
+    def ridgeplot(df,atlases,outfile,plotnameorder):
+        show_label=False
+        #plt.subplots(figsize=(10,20))
+        # Initialize the FacetGrid object
+        x=[]
+        for i in np.unique(df['g']):
+            x.append(np.median(df[df['g']==i]['x']))
+        roworder=np.unique(df['g'])[np.argsort(x)[::-1]]
+
+        # for colour and row name match
+        with sns.plotting_context(font_scale=5):
+            g1 = sns.FacetGrid(df, row="g", hue="g", aspect=len(pipelines)*(len(pipelines)-1)/2, height=2)
+        default_rowname=g1.row_names
+
+        if plotnameorder:
+            default_rowname=plotnameorder
+        sortidx=[]
+        for i in default_rowname:
+            sortidx.append(list(roworder).index(i))
+
+
+        #pal = sns.cubehelix_palette(len(np.unique(df['g'])), rot=-.25, light=.7)
+        #pal = np.asarray(sns.cubehelix_palette(len(np.unique(df['g'])), rot=.9, light=.7))
+        #pal = np.asarray(sns.color_palette("purple", len(np.unique(df['g']))))
+        pal = np.asarray(sns.cubehelix_palette(len(np.unique(df['g'])), start=.5, rot=-.75,light=0.7))
+
+        #pal=pal[sortidx][::-1]
+        pal=pal[::-1]
+        pal=pal[sortidx]
+        with sns.plotting_context(font_scale=5):
+            #g = sns.FacetGrid(df, row="g", hue="g", row_order=roworder, aspect=len(pipelines)*(len(pipelines)-1)/4, height=2*10/(len(pipelines)*(len(pipelines)-1)/2), palette=pal)
+            #g = sns.FacetGrid(df, sharey=True,row='g',hue="atlas", row_order=roworder, aspect=len(pipelines)*(len(pipelines)-1)/4, height=2*10/(len(pipelines)*(len(pipelines)-1)/2), palette=['black','red','blue'])
+            #g = sns.FacetGrid(df, sharey=True, row="g", hue="atlas", row_order=roworder, aspect=5, height=2, palette=['black','red','blue'])
+            g = sns.FacetGrid(df, sharey=False, row="g", hue="atlas", row_order=roworder, aspect=5, height=2, palette=['black','red','blue'])
+            #g = sns.FacetGrid(df, sharey=True, row="g", hue="atlas", row_order=roworder, aspect=1.07, height=2.8, palette=['black','red','blue'])
+
+        # Draw the densities in a few steps
+        #g.map(sns.kdeplot, "x",hist=False)
+        
+        if len(atlases) ==1:
+            g.map(sns.kdeplot, "x",shade=True,color='red')
+        else:
+            g.map(sns.kdeplot, "x",shade=True)
+
+        #.add_legend()
+
+
+        #g.map(sns.kdeplot, df2['x'],shade=True,color='blue')
+        lw_value=3
+        g.map(plt.axvline, x=1, lw=lw_value, clip_on=False,color=(134/256.0,250/256.0,167/256.0))
+        g.map(plt.axvline, x=0.9, lw=lw_value, clip_on=False,color=(128/256.0,171/256.0,69/256.0))
+        g.map(plt.axvline, x=0.8, lw=lw_value, clip_on=False,color=(128/256.0,126/256.0,38/256.0))
+        g.map(plt.axvline, x=0.7, lw=lw_value, clip_on=False,color=(246/256.0,192/256.0,66/256.0))
+        g.map(plt.axvline, x=0.6, lw=lw_value, clip_on=False,color=(192/256.0,98/256.0,43/256.0))
+
+        #g.map(sns.kdeplot, "x", clip_on=False, color="w", lw=2, bw=.2)
+        g.map(plt.axhline, y=0, lw=2, clip_on=False)
+
+
+        # Define and use a simple function to label the plot in axes coordinates
+        def label(x, color, label):
+            ax = plt.gca()
+            ax.text(0, .2, label, fontweight="bold", color='black',fontsize=35,
+                    ha="left", va="center", transform=ax.transAxes)
+            #ax.text(0, .2, label, fontweight="bold", color=color,fontsize=25,
+            #        ha="left", va="center", transform=ax.transAxes)
+        if show_label==True:
+            g.map(label, "x")
+        # Set the subplots to overlap
+        #g.fig.subplots_adjust(hspace=-.6)
+
+        # change the x axis label size
+        ax = plt.gca()
+        ax.tick_params(axis = 'both', which = 'major', labelsize = 35)
+
+        # Remove axes details that don't play well with overlap
+        g.set(xlim=(0, 1))
+        g.set_titles("")
+        g.set(xlabel='')
+        g.set(yticks=[])
+        g.despine(bottom=True, left=True)
+
+        if len(os.path.basename(outfile))>140:
+            outfile=os.path.dirname(outfile)+ '/' + os.path.basename(outfile)[0:130]+'.png'
+
+
+        g.savefig(outfile)
+
+
+    value_median=pd.DataFrame(np.zeros(((len(pipelines)*(len(pipelines)-1))/2,4)), columns=['Pipelines','Atlas200','Atlas600','Atlas1000'])
+    value_std=pd.DataFrame(np.zeros(((len(pipelines)*(len(pipelines)-1))/2,4)), columns=['Pipelines','Atlas200','Atlas600','Atlas1000'])
+    
+    value_quartile=pd.DataFrame(np.zeros(((len(pipelines)*(len(pipelines)-1))/2,13)), columns=['Pipelines','25_Atlas200','50_Atlas200','75_Atlas200','100_Atlas200','25_Atlas600','50_Atlas600','75_Atlas600','100_Atlas600','25_Atlas1000','50_Atlas1000','75_Atlas1000','100_Atlas1000'])
 
 
 
+    atlas_idx=0
+    for atlas in atlases:
+        print(atlas)
+        df_all=pd.DataFrame(columns = ['x','g'])
+        idx=0
+        if simpleplot == True:
+            plotrange=1
+        else:
+            plotrange=len(pipelines)
+        for i in range(0,plotrange):
+            for j in range(i+1,len(pipelines)):
+                p1=pipelines[i]
+                p2=pipelines[j]
+                p1=p1.replace('ABCD','abcd')
+                p2=p2.replace('ABCD','abcd')
+                pp1= base+ '/ICC_Schaefer' + atlas + '/' + p1 + '_' + p2 + '_ICC.csv'
+                pp2= base+ '/ICC_Schaefer' + atlas + '/' + p2 + '_' + p1 + '_ICC.csv'
+                print(pp1)
+                print(pp2)
+                if os.path.isfile(pp1):
+                    tmp=pd.read_csv(pp1,header=None,names=['x'])
+                    print(pp1)
+                elif os.path.isfile(pp2):
+                    tmp=pd.read_csv(pp2,header=None,names=['x'])
+                    print(pp1)
+                
+                pn1=p1
+                pn2=p2
+                for key in namechangedict:
+                    pn1=pn1.replace(key,namechangedict[key])
+                #pn1=pn1.replace('cpac','CPAC:fmriprep')
+                for key in namechangedict:
+                    pn2=pn2.replace(key,namechangedict[key])
+                #pn2=pn2.replace('cpac','CPAC:fmriprep')
 
+                #print(pp)
+
+                # get median and std
+                print(pp1+str(np.median(tmp))+str(np.std(tmp)))
+                value_median['Pipelines'][idx] = p1+'_'+p2
+                value_median['Atlas'+atlas][idx] = np.median(tmp)
+
+                value_std['Pipelines'][idx] = p1+'_'+p2
+                value_std['Atlas'+atlas][idx] = np.std(tmp)
+
+                value_quartile['Pipelines'][idx] = p1+'_'+p2
+                for pct_val in [25,50,75, 100]:
+                    value_quartile[str(pct_val)+'_Atlas'+atlas][idx] = np.percentile(tmp, pct_val, interpolation = 'midpoint') 
+
+
+                #tmp=pd.DataFrame(pp, columns=['x'])
+                tmp['g']=pn1+' - '+pn2
+                df_all=pd.concat([df_all,tmp])
+                print(df_all.head(3))
+                idx += 1
+        # put multipel atlas in one redge plot.
+        if atlas=='200':
+            df_ridge_1=df_all
+            df_ridge_1['atlas']='200'
+        elif atlas=='600':
+            df_ridge_2=df_all
+            df_ridge_2['atlas']='600'
+        elif atlas=='1000':
+            df_ridge_3=df_all
+            df_ridge_3['atlas']='1000'
+
+
+    #df_ridge_1.reset_index(drop=True, inplace=True)
+
+    if len(atlases)==1:
+        df=pd.concat([df_ridge_1])
+    if len(atlases)==2:
+        df=pd.concat([df_ridge_1])
+        df=pd.concat([df_ridge_1,df_ridge_2])
+    if len(atlases)==3:
+        df=pd.concat([df_ridge_1])
+        df=pd.concat([df_ridge_1,df_ridge_2])
+        df=pd.concat([df_ridge_1,df_ridge_2,df_ridge_3])
+    #df=pd.concat([df_ridge_1,df_ridge_2,df_ridge_3])
+    df = df[df['x'] != 0]
+    #df_ridge_2.reset_index(drop=True, inplace=True)
+    #df_ridge=pd.concat([df_ridge_1,df_ridge_2], ignore_index=True, axis=1)
+    #df_ridge=df_ridge.fillna(-9999)
+    
+    #df_ridge.columns=['x','g','xx','gg']
+    print(value_median)
+
+    value_median.to_csv(os.path.dirname(base) + '/figures/Ridgeplot_ICC_'+'_'+'-'.join(pipelines)[0:90]+'_Median.csv')
+    value_std.to_csv(os.path.dirname(base) + '/figures/Ridgeplot_ICC_'+'_'+'-'.join(pipelines)[0:90]+'_std.csv')
+
+    value_quartile.to_csv(os.path.dirname(base) + '/figures/Ridgeplot_ICC_'+'_'+'-'.join(pipelines)[0:90]+'_quartile.csv')
+
+    ridgeplot(df,atlases,outpath + '/Ridgeplot_ICC_'+'_'+'-'.join(pipelines)[0:90]+'_'+atlas+'.png',plotnameorder)
 
 
 ### Example
