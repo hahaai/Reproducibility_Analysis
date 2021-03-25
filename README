@@ -8,13 +8,13 @@ This called functions in spatial_corr_ridgeplot_func.py.
 
 In order to run the script, the folder structuree should be like:
 
-**.py
---ROI
-	--ROI_Schaefer200
-		--fmriprep
-		--CPAC:Default
-			--sub-*.1D
-		--*****
-	--ROI_Schaefer600
-	--ROI_Schaefer1000
---figures (where figure will be saved, this can be changed in the scripts.)
+-- **.py
+-- ROI
+    -- ROI_Schaefer200
+        -- fmriprep
+        -- CPAC:Default
+            --sub-*.1D
+        -- *****
+    -- ROI_Schaefer600
+    -- ROI_Schaefer1000
+-- figures (where figure will be saved, this can be changed in the scripts.)
