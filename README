@@ -1,1 +1,8 @@
-Analysis Scripts for Reproducibility Project
+# Analysis Scripts for Reproducibility Project
+
+## Minimal Preprocessing
+
+Script: `Minimal_spatial_corr_ridgeplot.py`
+
+This called functions in spatial_corr_ridgeplot_func.py.
+
