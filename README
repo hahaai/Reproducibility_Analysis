@@ -18,3 +18,6 @@ In order to run the script, the folder structuree should be like:
     -- ROI_Schaefer600
     -- ROI_Schaefer1000
 -- figures (where figure will be saved, this can be changed in the scripts.)
+
+
+R Script, Reliability_general_minimal.R generate ICC, I2C2, and Discriminability numbers.
