@@ -1038,7 +1038,7 @@ nuisance_corrections:
           method: default
           top_frequency: 0.1
         CerebrospinalFluid:
-          erode_mask: On
+          erode_mask: Off
           extraction_resolution: 2
           summary: Mean
         GlobalSignal:
@@ -1063,7 +1063,7 @@ nuisance_corrections:
           method: default
           top_frequency: 0.1
         CerebrospinalFluid:
-          erode_mask: On
+          erode_mask: Off
           extraction_resolution: 2
           summary: Mean
         Motion:
