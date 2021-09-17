@@ -366,8 +366,7 @@ def spatial_corr_plot(base,outpath,pipelines_list,atlases,namechangedict,fc_hand
         tmp2=random.sample(list_difference(All_sessions,tmp1),tt)
         duration30=[tmp1,tmp2]
         tmp=''.join(sum(duration30,[]))
-        duration30_all.append(tmp)
-        while tmp in duration30_all and tmp[::-1] in duration30_all:
+        while tmp in duration30_all or tmp[::-1] in duration30_all:
             tmp1=random.sample(All_sessions,tt)
             tmp2=random.sample(list_difference(All_sessions,tmp1),tt)
             duration30=[tmp1,tmp2]
@@ -380,8 +379,7 @@ def spatial_corr_plot(base,outpath,pipelines_list,atlases,namechangedict,fc_hand
         tmp2=random.sample(list_difference(All_sessions,tmp1),tt)
         duration50=[tmp1,tmp2]
         tmp=''.join(sum(duration50,[]))
-        duration50_all.append(tmp)
-        while tmp in duration50_all and tmp[::-1] in duration50_all:
+        while tmp in duration50_all or tmp[::-1] in duration50_all:
             tmp1=random.sample(All_sessions,tt)
             tmp2=random.sample(list_difference(All_sessions,tmp1),tt)
             duration50=[tmp1,tmp2]
